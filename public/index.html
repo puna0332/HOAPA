@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Chúc mừng ngày Phụ nữ Việt Nam 20/10</title>
+<meta name="description" content="Một bó hoa và lá thư dành tặng ngày 20/10." />
+<meta name="theme-color" content="#2a0a1c" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌹</text></svg>" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;700&family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,600;1,400&family=Playfair+Display:ital,wght@0,500;1,500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+
+<!-- ambient background -->
+<div class="sky" aria-hidden="true">
+  <div class="glow glow-a"></div>
+  <div class="glow glow-b"></div>
+  <div class="glow glow-c"></div>
+  <div class="vignette"></div>
+</div>
+<canvas id="bokeh" aria-hidden="true"></canvas>
+<div id="petalRain" aria-hidden="true"></div>
+
+<main class="stage">
+
+  <header class="title-block">
+    <p class="eyebrow">20 · 10</p>
+    <h1 class="title">Chúc mừng ngày<br /><span>Phụ nữ Việt Nam</span></h1>
+    <p class="subtitle">Một bó hoa nhỏ, gửi trọn lời thương</p>
+  </header>
+
+  <!-- bouquet -->
+  <div class="bouquet-wrap">
+    <div class="bouquet" id="bouquet">
+      <svg class="stems" viewBox="0 0 600 600" preserveAspectRatio="none" aria-hidden="true">
+        <g id="stemGroup" fill="none" stroke-linecap="round"></g>
+      </svg>
+      <div class="leaves" id="leaves" aria-hidden="true"></div>
+      <div class="flowers" id="flowers" role="img" aria-label="Bó hoa hồng nhiều màu"></div>
+      <svg class="wrap" viewBox="0 0 600 600" aria-hidden="true">
+        <defs>
+          <linearGradient id="paperL" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#fff6f1" stop-opacity=".97" />
+            <stop offset="55%" stop-color="#ffdfe8" stop-opacity=".95" />
+            <stop offset="100%" stop-color="#f2b6c8" stop-opacity=".95" />
+          </linearGradient>
+          <linearGradient id="paperR" x1="1" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#fffaf6" stop-opacity=".97" />
+            <stop offset="55%" stop-color="#ffe6ec" stop-opacity=".95" />
+            <stop offset="100%" stop-color="#e9a6bd" stop-opacity=".95" />
+          </linearGradient>
+          <linearGradient id="paperBack" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#ffe9f0" stop-opacity=".8" />
+            <stop offset="100%" stop-color="#d98fa9" stop-opacity=".9" />
+          </linearGradient>
+          <linearGradient id="ribbonG" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#ffd98a" />
+            <stop offset="45%" stop-color="#f3b24e" />
+            <stop offset="100%" stop-color="#d98f2c" />
+          </linearGradient>
+        </defs>
+
+        <!-- back sheet -->
+        <path class="sheet sheet-back" d="M300 318 C 196 332 128 372 96 430 C 178 404 240 398 300 400 C 360 398 422 404 504 430 C 472 372 404 332 300 318 Z" fill="url(#paperBack)" />
+        <!-- cone -->
+        <path class="sheet sheet-left" d="M300 340 C 228 348 170 376 128 424 L 300 586 Z" fill="url(#paperL)" />
+        <path class="sheet sheet-right" d="M300 340 C 372 348 430 376 472 424 L 300 586 Z" fill="url(#paperR)" />
+        <!-- fold lines -->
+        <g class="folds" stroke="#c98ba0" stroke-opacity=".35" stroke-width="1.6" fill="none">
+          <path d="M300 344 L 232 520" />
+          <path d="M300 344 L 368 520" />
+          <path d="M300 344 L 300 560" />
+          <path d="M300 344 L 180 452" />
+          <path d="M300 344 L 420 452" />
+        </g>
+        <!-- ribbon -->
+        <g class="ribbon">
+          <path d="M214 452 C 262 476 338 476 386 452 L 392 474 C 338 500 262 500 208 474 Z" fill="url(#ribbonG)" />
+          <path d="M300 468 C 268 440 226 436 214 456 C 230 480 272 482 300 468 Z" fill="url(#ribbonG)" />
+          <path d="M300 468 C 332 440 374 436 386 456 C 370 480 328 482 300 468 Z" fill="url(#ribbonG)" />
+          <circle cx="300" cy="468" r="11" fill="#ffe3a6" />
+          <path d="M296 476 C 286 508 276 520 262 534" stroke="url(#ribbonG)" stroke-width="7" fill="none" stroke-linecap="round" />
+          <path d="M304 476 C 316 506 328 518 344 530" stroke="url(#ribbonG)" stroke-width="7" fill="none" stroke-linecap="round" />
+        </g>
+      </svg>
+      <div class="bouquet-shadow" aria-hidden="true"></div>
+    </div>
+  </div>
+
+  <!-- envelope -->
+  <div class="envelope-zone">
+    <p class="hint" id="hint">Chạm vào phong thư để mở lời chúc</p>
+    <button class="envelope" id="envelope" type="button" aria-expanded="false" aria-controls="letter" aria-label="Mở lá thư chúc mừng 20/10">
+      <span class="env-shadow"></span>
+      <span class="env-body">
+        <span class="env-back"></span>
+        <span class="env-note"></span>
+        <span class="env-front"></span>
+        <span class="env-flap"></span>
+        <span class="env-seal">20<small>/10</small></span>
+      </span>
+      <span class="env-sparkle s1"></span>
+      <span class="env-sparkle s2"></span>
+      <span class="env-sparkle s3"></span>
+    </button>
+  </div>
+</main>
+
+<!-- letter overlay -->
+<div class="overlay" id="overlay" hidden>
+  <div class="overlay-bg" id="overlayBg"></div>
+  <div class="letter" id="letter" role="dialog" aria-modal="true" aria-labelledby="letterTitle" tabindex="-1">
+    <button class="letter-close" id="letterClose" type="button" aria-label="Đóng lá thư">&times;</button>
+    <div class="letter-paper">
+      <div class="letter-deco top" aria-hidden="true">🌸 ❀ 🌷 ❀ 🌸</div>
+      <h2 class="letter-title" id="letterTitle">Gửi người phụ nữ tuyệt vời</h2>
+      <div class="letter-body">
+        <p>Nhân ngày <strong>20/10</strong>, xin gửi đến bạn một bó hoa — không phải hoa thật, nhưng là những cánh hoa được xếp bằng tất cả sự trân trọng.</p>
+        <p>Cảm ơn vì sự dịu dàng đã che chở, vì sự mạnh mẽ đã gánh vác, và vì nụ cười vẫn nở ngay cả trong những ngày chẳng mấy dễ dàng.</p>
+        <p>Chúc bạn một ngày thật nhiều niềm vui: khỏe mạnh, bình an, luôn được yêu thương đúng cách và luôn tự hào về chính mình.</p>
+        <p class="wish">Hôm nay, và mọi ngày — bạn xứng đáng với những điều đẹp nhất. 💐</p>
+      </div>
+      <p class="letter-sign">Thương mến,<br /><span>Người luôn nghĩ về bạn</span></p>
+      <div class="letter-deco bottom" aria-hidden="true">❀ ❀ ❀</div>
+    </div>
+  </div>
+  <div class="heart-field" id="heartField" aria-hidden="true"></div>
+</div>
+
+<button class="sound-toggle" id="soundToggle" type="button" aria-pressed="false" aria-label="Bật nhạc nền">
+  <span class="ico">♪</span>
+</button>
+
+<script src="./main.js" type="module"></script>
+</body>
+</html>
