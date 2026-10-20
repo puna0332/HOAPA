@@ -294,64 +294,75 @@ function burstHearts() {
   }
 }
 
-/* ---------- tiny WebAudio music box ---------- */
+/* ---------- background music (mp3, autoplay with gesture fallback) ---------- */
 
 const Music = (() => {
-  let ctx = null, timer = null, master = null, step = 0, on = false;
-  // C major pentatonic, two octaves — gentle music-box feel
-  const SCALE = [523.25, 587.33, 659.25, 783.99, 880.0, 1046.5, 1174.66, 1318.51];
-  const PATTERN = [0, 2, 4, 2, 5, 4, 2, 0, 3, 5, 7, 5, 4, 2, 1, 2];
+  const TARGET = 0.62;          // final volume
+  const el = document.getElementById('bgm');
+  let fadeTimer = null;
+  const listeners = new Set();
 
-  function note(freq, time, dur, gain) {
-    const osc = ctx.createOscillator();
-    const env = ctx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.value = freq;
-    env.gain.setValueAtTime(0, time);
-    env.gain.linearRampToValueAtTime(gain, time + 0.015);
-    env.gain.exponentialRampToValueAtTime(0.0001, time + dur);
-    osc.connect(env).connect(master);
-    osc.start(time);
-    osc.stop(time + dur + 0.05);
+  function notify() { listeners.forEach((fn) => fn(Music.playing)); }
+
+  function fadeTo(target, ms = 1400, done) {
+    if (!el) return;
+    clearInterval(fadeTimer);
+    const from = el.volume;
+    const t0 = performance.now();
+    fadeTimer = setInterval(() => {
+      const k = Math.min(1, (performance.now() - t0) / ms);
+      el.volume = Math.max(0, Math.min(1, from + (target - from) * k));
+      if (k >= 1) { clearInterval(fadeTimer); fadeTimer = null; done?.(); }
+    }, 40);
+  }
+  async function play() {
+    if (!el) return false;
+    try {
+      el.volume = 0;
+      await el.play();
+      fadeTo(TARGET, 2200);
+      notify();
+      return true;
+    } catch {
+      notify();
+      return false;
+    }
   }
 
-  function tick() {
-    const t = ctx.currentTime + 0.05;
-    const i = PATTERN[step % PATTERN.length];
-    note(SCALE[i], t, 1.5, 0.16);
-    if (step % 4 === 0) note(SCALE[i] / 2, t, 2.2, 0.08);
-    step++;
+  function pause() {
+    if (!el) return;
+    fadeTo(0, 600, () => el.pause());
+    notify();
+  }
+
+  /* Browsers block audio until the user interacts. Try immediately; if the
+     promise rejects, arm one-shot listeners so the very first tap starts it. */
+  function arm() {
+    const kick = async () => {
+      const ok = await play();
+      if (ok) off();
+    };
+    const off = () => {
+      ['pointerdown', 'touchstart', 'keydown', 'click'].forEach((e) =>
+        document.removeEventListener(e, kick, true));
+    };
+    ['pointerdown', 'touchstart', 'keydown', 'click'].forEach((e) =>
+      document.addEventListener(e, kick, true));
   }
 
   return {
-    get on() { return on; },
-    toggle() {
-      if (!ctx) {
-        const AC = window.AudioContext || window.webkitAudioContext;
-        if (!AC) return false;
-        ctx = new AC();
-        master = ctx.createGain();
-        master.gain.value = 0.5;
-        master.connect(ctx.destination);
-      }
-      if (on) {
-        clearInterval(timer); timer = null; on = false;
-        master.gain.cancelScheduledValues(ctx.currentTime);
-        master.gain.setTargetAtTime(0, ctx.currentTime, 0.2);
-      } else {
-        ctx.resume();
-        master.gain.cancelScheduledValues(ctx.currentTime);
-        master.gain.setTargetAtTime(0.5, ctx.currentTime, 0.3);
-        tick();
-        timer = setInterval(tick, 620);
-        on = true;
-      }
-      return on;
+    get playing() { return !!el && !el.paused; },
+    onChange(fn) { listeners.add(fn); },
+    async boot() {
+      const ok = await play();
+      if (!ok) arm();
+      el?.addEventListener('play', notify);
+      el?.addEventListener('pause', notify);
     },
-    chime() {
-      if (!ctx) return;
-      const t = ctx.currentTime + 0.02;
-      [1046.5, 1318.51, 1567.98, 2093].forEach((f, i) => note(f, t + i * 0.08, 1.4, 0.14));
+    toggle() {
+      if (Music.playing) { pause(); return false; }
+      play();
+      return true;
     },
   };
 })();
@@ -377,7 +388,6 @@ function initLetter() {
     env.classList.add('is-open');
     env.setAttribute('aria-expanded', 'true');
     if (hint) hint.style.opacity = '0';
-    Music.chime();
     setTimeout(() => {
       overlay.hidden = false;
       requestAnimationFrame(() => {
@@ -413,11 +423,18 @@ function initLetter() {
 
 function initSound() {
   const btn = document.getElementById('soundToggle');
-  btn?.addEventListener('click', () => {
-    const state = Music.toggle();
-    btn.setAttribute('aria-pressed', String(state));
-    btn.setAttribute('aria-label', state ? 'Tắt nhạc nền' : 'Bật nhạc nền');
+  if (!btn) return;
+  const paint = (on) => {
+    btn.setAttribute('aria-pressed', String(on));
+    btn.setAttribute('aria-label', on ? 'Tắt nhạc nền' : 'Bật nhạc nền');
+    btn.classList.toggle('needs-tap', !on);
+  };
+  Music.onChange(paint);
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    paint(Music.toggle());
   });
+  paint(Music.playing);
 }
 
 /* ---------- boot ---------- */
@@ -428,6 +445,7 @@ function boot() {
   startBokeh();
   initLetter();
   initSound();
+  Music.boot();
   document.documentElement.dataset.ready = '1';
 }
 
